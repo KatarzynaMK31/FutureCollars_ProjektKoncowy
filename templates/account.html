@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JADEIT / Twoje konto</title>
+    <link rel="stylesheet" href="{{url_for('static', filename= 'stylesheet.css')}}">
+</head>
+<body>
+<div class=container11>
+    <h1>-------------- $ ---- DOŁADUJ KONTO ---- $ --------------</h1>
+</div>
+<div class=container4>
+    <a href = "{{url_for('operation')}}"> wyjdź </a>
+</div>
+<div class=container12>
+    <h3><p>Twój bank to: Złota Skarbonka PL</p></h3>
+    <h3><p>Zadeklarowana forma płatności: przelaw 24</p></h3>
+    <h3><p>Aktualne saldo konta: {{balance}} zł</p></h3>
+</div>
+<form action="{{url_for('account')}}" method="POST">
+    <div class=container2>
+        <br>
+        <p>Kwota wpłaty :</p>
+        <input name='modified' type='number'/> zł
+        <p>Data :</p>
+        <input name='datetime' type='date'/>
+        <button type='submit'>Wykonaj</button>
+    </div>
+</form>
+<div class=container1>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <h3>-------------------------------- UWAGA !!! ----------------------------</h3>
+        <h4>
+            <li>{{message}}</li>
+        </h4>
+        <h3>-----------------------------------------------------------------------------</h3>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+</div>
+</body>
+</html>
+

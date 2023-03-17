@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JADEIT / Historia</title>
+    <link rel="stylesheet" href="{{url_for('static', filename= 'stylesheet.css')}}">
+</head>
+<body>
+<div class=container11>
+    <h1>-------------- $ ---- HISTORIA TRANSAKCJI ---- $ --------------</h1>
+</div>
+<div class=container4>
+     <a href = "{{url_for('operation')}}"> wyjdź </a>
+</div>
+<form action="{{url_for('history')}}" method="POST">
+    <div class=container1>
+        <h3>Podaj zakres historii</h3>
+    </div>
+       <div class=container12>
+           <h4>
+               <input type="checkbox" name='line7'> 7-dniowa
+               <input type="checkbox" name='line14'> 14-dniowa
+               <input type="checkbox" name='line30'> 30-dniowa
+               <input type="checkbox" name='line0'> cała historia
+           </h4>
+           <button type='submit'>Gotowe</button>
+       </div>
+    <div class=container11>
+        <br>
+        <h3> -------------------------------------------------- HISTORIA --------------------------------------------------</h3>
+    </div>
+</form>
+<div class=container3>
+         {% for line in part_history %}
+                <p>{{line.line}}</p>
+         {% endfor %}
+</div>
+</body>
+</html>
+
+

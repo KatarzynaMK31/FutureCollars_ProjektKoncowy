@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JADEIT / Kryptowaluty</title>
+    <link rel="stylesheet" href="{{url_for('static', filename= 'stylesheet.css')}}">
+</head>
+<body>
+<div class=container11>
+	<h1>-------------- $ ---- KRYPTOWALUTY ---- $ --------------</h1>
+</div>
+<div class=container4>
+	<a href = "{{url_for('home')}}"> wyjdź </a>
+</div>
+<div class=container1>
+		<label><a href="{{url_for('account')}}"> ZASIL KONTO / /</a><a href="{{url_for('history')}}"> HISTORIA / /</a><a href="{{url_for('purse_sell')}}"> PORTFEL</a></label>
+</div>
+
+<div class=container1>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+        <h3>-------------------------------- UWAGA !!! ----------------------------</h3>
+        <h4>
+            <li>{{message}}</li>
+        </h4>
+        <h3>-----------------------------------------------------------------------------</h3>
+        {% endfor %}
+    </ul>
+    {% endif %}
+	{% endwith %}
+</div>
+<form action="{{url_for('account')}}" method="POST">
+<div>
+    <br>
+    <table>
+        <tr>
+            <th>SYMBOL</th>
+            <th>NAZWA</th>
+            <th>cena / USD _ SPRZEDAJ</th>
+            <th>cena / zł _ SPRZEDAJ</th>
+            <th>cena / USD _ KUP </th>
+            <th>cena / zł _ KUP </th>
+            <th>--------</th>
+        </tr>
+        {% for position in parameters %}
+        <tr>
+            <td>{{ parameters[position][0] }}</td>
+            <td>{{ parameters[position][1] }}</td>
+            <td>{{ parameters[position][2] }}</td>
+            <td>{{ parameters[position][3] }}</td>
+            <td>{{ parameters[position][4] }}</td>
+            <td>{{ parameters[position][5] }}</td>
+            <td><a href = "{{url_for('coin_purchase')}}"> KUP </a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+</form>
+</body>
+</html>
+
