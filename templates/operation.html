@@ -15,7 +15,6 @@
 <div class=container1>
 		<label><a href="{{url_for('account')}}"> ZASIL KONTO / /</a><a href="{{url_for('history')}}"> HISTORIA / /</a><a href="{{url_for('purse_sell')}}"> PORTFEL</a></label>
 </div>
-
 <div class=container1>
 {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -52,7 +51,7 @@
             <td>{{ parameters[position][3] }}</td>
             <td>{{ parameters[position][4] }}</td>
             <td>{{ parameters[position][5] }}</td>
-            <td><a href = "{{url_for('coin_purchase')}}"> KUP </a></td>
+            <td><a href = "{{url_for('coin_purchase')}}" style="margin-left: 10px"> KUP </a></td>
         </tr>
         {% endfor %}
     </table>

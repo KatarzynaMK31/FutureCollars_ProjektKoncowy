@@ -109,40 +109,37 @@ def coin_purchase():
         flash(f"Zasil konto.")
     rf = request.form
     if rf.get('crypto_symbol') and rf.get('crypto_qty'):
-        if rf.get('crypto_symbol') not in parameters:
-            flash('Nieprawidłowy symbol kryptowaluty.')
+        if int(rf.get('crypto_qty')) < 1:
+            flash('Nieprawidłowa wartość.')
         else:
-            if int(rf.get('crypto_qty')) < 1:
-                flash('Nieprawidłowa wartość.')
+            crypto_price_purchase = parameters[rf.get('crypto_symbol')][5]
+            crypto_total_value = float(crypto_price_purchase) * int(rf['crypto_qty'])
+            b.balance -= round(crypto_total_value, 2)
+            symbol = parameters[rf.get('crypto_symbol')][0]
+            name = parameters[rf.get('crypto_symbol')][1]
+            price = float(parameters[rf.get('crypto_symbol')][5])
+            qty = int(rf['crypto_qty'])
+            wallet = Wallet.query.all()
+            w = Wallet(symbol=symbol, name=name, qty=qty, price=price)
+            if crypto_total_value < 0.01:
+                flash('Wartość transakcji jest za niska. Kup większą ilość tej kryptowaluty.')
             else:
-                crypto_price_purchase = parameters[rf.get('crypto_symbol')][5]
-                crypto_total_value = float(crypto_price_purchase) * int(rf['crypto_qty'])
-                b.balance -= round(crypto_total_value, 2)
-                symbol = parameters[rf.get('crypto_symbol')][0]
-                name = parameters[rf.get('crypto_symbol')][1]
-                price = float(parameters[rf.get('crypto_symbol')][5])
-                qty = int(rf['crypto_qty'])
-                wallet = Wallet.query.all()
-                w = Wallet(symbol=symbol, name=name, qty=qty, price=price)
-                if crypto_total_value < 0.01:
-                    flash('Wartość transakcji jest za niska. Kup większą ilość tej kryptowaluty.')
-                else:
-                    if b.balance > 0:
-                        if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first():
-                            Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty += int(rf['crypto_qty'])
-                            h = History(
-                                line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
-                        else:
-                            h = History(
-                                line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
-                            db.session.add(w)
-                        db.session.add(h)
-                        db.session.commit()
+                if b.balance > 0:
+                    if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first():
+                        Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty += int(rf['crypto_qty'])
+                        h = History(
+                            line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
                     else:
-                        b.balance += round(crypto_total_value, 2)
-                        flash(f"Koszt jest za wysoki. Jest za mało środków na koncie - zasil konto.")
+                        h = History(
+                            line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
+                        db.session.add(w)
+                    db.session.add(h)
                     db.session.commit()
-    return render_template('coin_purchase.html', balance=b.balance, wallet=wallet)
+                else:
+                    b.balance += round(crypto_total_value, 2)
+                    flash(f"Koszt jest za wysoki. Jest za mało środków na koncie - zasil konto.")
+                db.session.commit()
+    return render_template('coin_purchase.html', balance=b.balance, wallet=wallet, parameters=parameters)
 
 
 @app.route("/purse_sell", methods=['GET', 'POST'])
@@ -152,35 +149,34 @@ def purse_sell():
     wallet = Wallet.query.all()
     rf = request.form
     if rf.get('crypto_symbol') and rf.get('crypto_qty'):
-        if not Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first():
-            flash('Brak takiej kryptowaluty w portfelu.')
+        if int(rf.get('crypto_qty')) < 1:
+            flash('Nieprawidłowa wartość.')
         else:
-            if int(rf.get('crypto_qty')) < 1:
-                flash('Nieprawidłowa wartość.')
+            name = parameters[rf.get('crypto_symbol')][1]
+            crypto_price_sell = parameters[rf.get('crypto_symbol')][3]
+            if int(rf['crypto_qty']) > Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty:
+                flash('Brak takiej ilości kryptowaluty w portfelu.')
             else:
-                name = parameters[rf.get('crypto_symbol')][1]
-                crypto_price_sell = parameters[rf.get('crypto_symbol')][3]
-                if int(rf['crypto_qty']) > Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty:
-                    flash('Brak takiej ilości kryptowaluty w portfelu.')
+                crypto_total_value = float(crypto_price_sell) * int(rf['crypto_qty'])
+                if crypto_total_value < 0.01:
+                    flash('Wartość transakcji jest za niska. Sprzedaj większą ilość tej kryptowaluty.')
                 else:
-                    crypto_total_value = float(crypto_price_sell) * int(rf['crypto_qty'])
-                    if crypto_total_value < 0.01:
-                        flash('Wartość transakcji jest za niska. Sprzedaj większą ilość tej kryptowaluty.')
+                    if wallet:
+                        profit = (float(parameters[rf.get('crypto_symbol')][3]) - Wallet.query.filter(
+                            Wallet.symbol == rf['crypto_symbol']).first().price) * int(rf['crypto_qty'])
+                        profit = round(profit, 2)
                     else:
-                        if wallet:
-                            profit = (float(parameters[rf.get('crypto_symbol')][3]) - Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().price) * int(rf['crypto_qty'])
-                            profit = round(profit, 2)
-                        else:
-                            profit = (float(parameters[rf.get('crypto_symbol')][3]) - float(parameters[rf.get('crypto_symbol')][5])) * int(rf['crypto_qty'])
-                            profit = round(profit, 2)
-                        b.balance += round(crypto_total_value, 2)
-                        Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty -= int(rf['crypto_qty'])
-                        h = History(
-                            line=f"{rf['datetime']}{' __ sprzedaż : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_sell:.5f}{' zł / wartość całkowita : '}{crypto_total_value:.2f}{' zł / zysk : '}{profit:.2f}{' zł'}")
-                        if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty == 0:
-                            db.session.delete(Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first())
-                        db.session.add(h)
-                        db.session.commit()
+                        profit = (float(parameters[rf.get('crypto_symbol')][3]) - float(
+                            parameters[rf.get('crypto_symbol')][5])) * int(rf['crypto_qty'])
+                        profit = round(profit, 2)
+                    b.balance += round(crypto_total_value, 2)
+                    Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty -= int(rf['crypto_qty'])
+                    h = History(
+                        line=f"{rf['datetime']}{' __ sprzedaż : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_sell:.5f}{' zł / wartość całkowita : '}{crypto_total_value:.2f}{' zł / zysk : '}{profit:.2f}{' zł'}")
+                    if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty == 0:
+                        db.session.delete(Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first())
+                    db.session.add(h)
+                    db.session.commit()
     return render_template('purse_sell.html', balance=b.balance, wallet=wallet, profit=profit)
 
 

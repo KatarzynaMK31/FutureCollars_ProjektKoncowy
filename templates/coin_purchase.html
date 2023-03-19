@@ -15,21 +15,30 @@
 <div class=container6>
     <a href="{{url_for('purse_sell')}}"> PORTFEL</a>
 </div>
-
+<form action="{{url_for('coin_purchase')}}" method="POST">
 <div class=container1>
     <h3>Aktualne saldo konta: {{balance}} zł</h3>
+    <h3><label>Chcę kupić</label></h3>
 </div>
-<form action="{{url_for('coin_purchase')}}" method="POST">
     <div class=container2>
-        <br>
-        <p>Symbol kryptowaluty :</p>
-        <input name='crypto_symbol' type='text'/>
-        <p>Ilość :</p>
-        <input name='crypto_qty' type='number'/>
-        <p>Data :</p>
-        <input name='datetime' type='date'/>
-        <button type='submit'>Kup</button>
+        <i>symbol kryptowaluty :&nbsp;&nbsp;&nbsp;</i>
+	    <select name='crypto_symbol'>
+            {% for position in parameters %}
+            <option>{{parameters[position][0]}}</option>
+            {% endfor %}
+            <input name='crypto_qty' type='number'
+                   style="margin-left: 70px"/>&nbsp;&nbsp;&nbsp;&nbsp;<i>ilość</i>
+        </select>
     </div>
+    <div>
+        <br>
+        <br>
+        <input name='datetime' type='date'
+               style="margin-left: 865px"/>&nbsp;&nbsp;&nbsp;&nbsp;<i>data</i>
+    </div>
+    <br>
+    <br>
+        <button type='submit' style="margin-left: 710px">Kup</button>
 </form>
 <div class=container1>
 {% with messages = get_flashed_messages() %}
