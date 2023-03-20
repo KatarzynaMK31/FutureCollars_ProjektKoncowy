@@ -80,12 +80,12 @@ def account():
     rf = request.form
     if rf.get('modified') and float(rf.get('modified')) > 0:
         b.balance += round(float(rf['modified']), 2)
-        h = History(line=f"{rf['datetime']}{' __ wpłata : '}{rf['modified']}{' zł / stan konta : '}{b.balance}{' zł'}")
+        h = History(line=f"{rf['datetime']}{' __ wpłata : '}{rf['modified']}{' zł / stan konta : '}{b.balance:.2f}{' zł'}")
         db.session.add(h)
         db.session.commit()
     if rf.get('modified') and float(rf.get('modified')) <= 0:
         flash(f"Nieprawidłowa wartość")
-    return render_template('account.html', balance=b.balance)
+    return render_template('account.html', balance=round(b.balance, 2))
 
 
 @app.route("/operation", methods=['GET', 'POST'])
@@ -139,7 +139,7 @@ def coin_purchase():
                     b.balance += round(crypto_total_value, 2)
                     flash(f"Koszt jest za wysoki. Jest za mało środków na koncie - zasil konto.")
                 db.session.commit()
-    return render_template('coin_purchase.html', balance=b.balance, wallet=wallet, parameters=parameters)
+    return render_template('coin_purchase.html', balance=round(b.balance, 2), wallet=wallet, parameters=parameters)
 
 
 @app.route("/purse_sell", methods=['GET', 'POST'])
@@ -177,7 +177,7 @@ def purse_sell():
                         db.session.delete(Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first())
                     db.session.add(h)
                     db.session.commit()
-    return render_template('purse_sell.html', balance=b.balance, wallet=wallet, profit=profit)
+    return render_template('purse_sell.html', balance=round(b.balance, 2), wallet=wallet, profit=profit)
 
 
 @app.route('/history', methods=['GET', 'POST'])
@@ -211,3 +211,6 @@ def history():
         for i in range(x - 1, -1, -1):
             part_history.append(history[i])
     return render_template('history.html', part_history=part_history)
+
+
+
