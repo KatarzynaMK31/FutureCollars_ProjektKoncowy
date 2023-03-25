@@ -74,20 +74,6 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/account", methods=['GET', 'POST'])
-def account():
-    b = Balance.query.get(1)
-    rf = request.form
-    if rf.get('modified') and float(rf.get('modified')) > 0:
-        b.balance += round(float(rf['modified']), 2)
-        h = History(line=f"{rf['datetime']}{' __ wpłata : '}{rf['modified']}{' zł / stan konta : '}{b.balance:.2f}{' zł'}")
-        db.session.add(h)
-        db.session.commit()
-    if rf.get('modified') and float(rf.get('modified')) <= 0:
-        flash(f"Nieprawidłowa wartość")
-    return render_template('account.html', balance=round(b.balance, 2))
-
-
 @app.route("/operation", methods=['GET', 'POST'])
 def operation():
     if not Balance.query.get(1):
@@ -99,6 +85,21 @@ def operation():
     if b.balance == 0:
         flash(f"Zasil konto.")
     return render_template('operation.html', balance=b.balance, parameters=parameters)
+
+
+@app.route("/account", methods=['GET', 'POST'])
+def account():
+    b = Balance.query.get(1)
+    rf = request.form
+    if rf.get('modified'):
+        if float(rf.get('modified')) <= 0:
+            flash(f"Nieprawidłowa wartość")
+        else:
+            b.balance += float(rf['modified'])
+            h = History(line=f"{rf['datetime']}{' __ wpłata : '}{rf['modified']}{' zł / stan konta : '}{b.balance:.2f}{' zł'}")
+            db.session.add(h)
+            db.session.commit()
+    return render_template('account.html', balance=round(b.balance, 2))
 
 
 @app.route("/coin_purchase", methods=['GET', 'POST'])
@@ -114,7 +115,7 @@ def coin_purchase():
         else:
             crypto_price_purchase = parameters[rf.get('crypto_symbol')][5]
             crypto_total_value = float(crypto_price_purchase) * int(rf['crypto_qty'])
-            b.balance -= round(crypto_total_value, 2)
+            b.balance -= crypto_total_value
             symbol = parameters[rf.get('crypto_symbol')][0]
             name = parameters[rf.get('crypto_symbol')][1]
             price = float(parameters[rf.get('crypto_symbol')][5])
@@ -127,16 +128,14 @@ def coin_purchase():
                 if b.balance > 0:
                     if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first():
                         Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty += int(rf['crypto_qty'])
-                        h = History(
-                            line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
+                        h = History(line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
                     else:
-                        h = History(
-                            line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
+                        h = History(line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
                         db.session.add(w)
                     db.session.add(h)
                     db.session.commit()
                 else:
-                    b.balance += round(crypto_total_value, 2)
+                    b.balance += crypto_total_value
                     flash(f"Koszt jest za wysoki. Jest za mało środków na koncie - zasil konto.")
                 db.session.commit()
     return render_template('coin_purchase.html', balance=round(b.balance, 2), wallet=wallet, parameters=parameters)
@@ -164,20 +163,16 @@ def purse_sell():
                     if wallet:
                         profit = (float(parameters[rf.get('crypto_symbol')][3]) - Wallet.query.filter(
                             Wallet.symbol == rf['crypto_symbol']).first().price) * int(rf['crypto_qty'])
-                        profit = round(profit, 2)
                     else:
-                        profit = (float(parameters[rf.get('crypto_symbol')][3]) - float(
-                            parameters[rf.get('crypto_symbol')][5])) * int(rf['crypto_qty'])
-                        profit = round(profit, 2)
-                    b.balance += round(crypto_total_value, 2)
+                        profit = (float(parameters[rf.get('crypto_symbol')][3]) - float(parameters[rf.get('crypto_symbol')][5])) * int(rf['crypto_qty'])
+                    b.balance += crypto_total_value
                     Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty -= int(rf['crypto_qty'])
-                    h = History(
-                        line=f"{rf['datetime']}{' __ sprzedaż : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_sell:.5f}{' zł / wartość całkowita : '}{crypto_total_value:.2f}{' zł / zysk : '}{profit:.2f}{' zł'}")
+                    h = History(line=f"{rf['datetime']}{' __ sprzedaż : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_sell:.5f}{' zł / wartość całkowita : '}{crypto_total_value:.2f}{' zł / zysk : '}{profit:.2f}{' zł'}")
                     if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty == 0:
                         db.session.delete(Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first())
                     db.session.add(h)
                     db.session.commit()
-    return render_template('purse_sell.html', balance=round(b.balance, 2), wallet=wallet, profit=profit)
+    return render_template('purse_sell.html', balance=round(b.balance, 2), wallet=wallet, profit=round(profit, 2))
 
 
 @app.route('/history', methods=['GET', 'POST'])
@@ -186,28 +181,28 @@ def history():
     history = History.query.all()
     x = len(history)
     rf = request.form
-    if rf.get('line7') and not rf.get('line14') and not rf.get('line30') and not rf.get('line0'):
+    if rf.get('line') == 'line7':
         if x < 7:
             for i in range(x - 1, -1, -1):
                 part_history.append(history[i])
         else:
             for i in range(x - 1, x - 8, -1):
                 part_history.append(history[i])
-    if rf.get('line14') and not rf.get('line7') and not rf.get('line30') and not rf.get('line0'):
+    if rf.get('line') == 'line14':
         if x < 14:
             for i in range(x - 1, -1, -1):
                 part_history.append(history[i])
         else:
             for i in range(x - 1, x - 15, -1):
                 part_history.append(history[i])
-    if rf.get('line30') and not rf.get('line7') and not rf.get('line14') and not rf.get('line0'):
+    if rf.get('line') == 'line30':
         if x < 30:
             for i in range(x - 1, -1, -1):
                 part_history.append(history[i])
         else:
             for i in range(x - 1, x - 31, -1):
                 part_history.append(history[i])
-    if rf.get('line0') and not rf.get('line7') and not rf.get('line14') and not rf.get('line30'):
+    if rf.get('line') == 'line0':
         for i in range(x - 1, -1, -1):
             part_history.append(history[i])
     return render_template('history.html', part_history=part_history)
