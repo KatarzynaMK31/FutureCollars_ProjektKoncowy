@@ -96,14 +96,15 @@ def account():
             flash(f"Nieprawidłowa wartość")
         else:
             b.balance += float(rf['modified'])
-            h = History(line=f"{rf['datetime']}{' __ wpłata : '}{rf['modified']}{' zł / stan konta : '}{b.balance:.2f}{' zł'}")
+            h = History(line=f"{rf['datetime']}{'__wpłata : '}{rf['modified']}{' zł / stan konta : '}{b.balance:.2f}{' zł'}")
             db.session.add(h)
             db.session.commit()
     return render_template('account.html', balance=round(b.balance, 2))
 
 
-@app.route("/coin_purchase", methods=['GET', 'POST'])
-def coin_purchase():
+@app.route("/coin_purchase/<symbol2>", methods=['GET', 'POST'])
+def coin_purchase(symbol2):
+    print(symbol2)
     wallet = []
     b = Balance.query.get(1)
     if b.balance == 0:
@@ -128,9 +129,9 @@ def coin_purchase():
                 if b.balance > 0:
                     if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first():
                         Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty += int(rf['crypto_qty'])
-                        h = History(line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
+                        h = History(line=f"{rf['datetime']}{'__zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{'__cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
                     else:
-                        h = History(line=f"{rf['datetime']}{' __ zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
+                        h = History(line=f"{rf['datetime']}{'__zakup : '}{name}{' / ilość : '}{rf['crypto_qty']}{'__cena/j.: '}{crypto_price_purchase:.5f}{' zł / koszt całkowity : '}{crypto_total_value:.2f}{' zł'}")
                         db.session.add(w)
                     db.session.add(h)
                     db.session.commit()
@@ -138,7 +139,7 @@ def coin_purchase():
                     b.balance += crypto_total_value
                     flash(f"Koszt jest za wysoki. Jest za mało środków na koncie - zasil konto.")
                 db.session.commit()
-    return render_template('coin_purchase.html', balance=round(b.balance, 2), wallet=wallet, parameters=parameters)
+    return render_template('coin_purchase.html', balance=round(b.balance, 2), wallet=wallet, parameters=parameters, symbol2=symbol2)
 
 
 @app.route("/purse_sell", methods=['GET', 'POST'])
@@ -167,7 +168,7 @@ def purse_sell():
                         profit = (float(parameters[rf.get('crypto_symbol')][3]) - float(parameters[rf.get('crypto_symbol')][5])) * int(rf['crypto_qty'])
                     b.balance += crypto_total_value
                     Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty -= int(rf['crypto_qty'])
-                    h = History(line=f"{rf['datetime']}{' __ sprzedaż : '}{name}{' / ilość : '}{rf['crypto_qty']}{' __ cena/j.: '}{crypto_price_sell:.5f}{' zł / wartość całkowita : '}{crypto_total_value:.2f}{' zł / zysk : '}{profit:.2f}{' zł'}")
+                    h = History(line=f"{rf['datetime']}{'__sprzedaż : '}{name}{' / ilość : '}{rf['crypto_qty']}{'__cena/j.: '}{crypto_price_sell:.5f}{' zł / wartość całkowita : '}{crypto_total_value:.2f}{' zł / zysk : '}{profit:.2f}{' zł'}")
                     if Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first().qty == 0:
                         db.session.delete(Wallet.query.filter(Wallet.symbol == rf['crypto_symbol']).first())
                     db.session.add(h)

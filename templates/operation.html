@@ -51,7 +51,7 @@
             <td>{{ parameters[position][3] }}</td>
             <td>{{ parameters[position][4] }}</td>
             <td>{{ parameters[position][5] }}</td>
-            <td><a href = "{{url_for('coin_purchase')}}" style="margin-left: 10px"> KUP </a></td>
+            <td><a href = "{{url_for('coin_purchase', symbol2=parameters[position][0])}}" style="margin-left: 10px"> KUP </a></td>
         </tr>
         {% endfor %}
     </table>

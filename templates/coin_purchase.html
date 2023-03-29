@@ -15,19 +15,20 @@
 <div class=container6>
     <a href="{{url_for('purse_sell')}}"> PORTFEL</a>
 </div>
-<form action="{{url_for('coin_purchase')}}" method="POST">
+<form action="{{url_for('coin_purchase', symbol2='BTC')}}" method="POST">
 <div class=container1>
     <h3>Aktualne saldo konta: {{balance}} zł</h3>
     <h3><label>Chcę kupić</label></h3>
 </div>
     <div class=container2>
-        <i>symbol kryptowaluty :&nbsp;&nbsp;&nbsp;</i>
-	    <select name='crypto_symbol'>
+        <i>symbol kryptowaluty :&nbsp;&nbsp;</i>
+        <select  name='crypto_symbol'>
+            <option>{{symbol2}}</option>
             {% for position in parameters %}
             <option>{{parameters[position][0]}}</option>
             {% endfor %}
             <input name='crypto_qty' type='number'
-                   style="margin-left: 70px"/>&nbsp;&nbsp;&nbsp;&nbsp;<i>ilość</i>
+                   style="margin-left: 70px"/>&nbsp;&nbsp;&nbsp;<i>ilość</i>
         </select>
     </div>
     <div>
