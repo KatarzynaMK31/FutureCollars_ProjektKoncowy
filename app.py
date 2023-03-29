@@ -104,7 +104,6 @@ def account():
 
 @app.route("/coin_purchase/<symbol2>", methods=['GET', 'POST'])
 def coin_purchase(symbol2):
-    print(symbol2)
     wallet = []
     b = Balance.query.get(1)
     if b.balance == 0:
