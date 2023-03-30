@@ -18,6 +18,7 @@ if __name__ == '__main__':
 from flask import Flask, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 import requests
+from copy import deepcopy
 
 
 app = Flask(__name__)
@@ -138,7 +139,9 @@ def coin_purchase(symbol2):
                     b.balance += crypto_total_value
                     flash(f"Koszt jest za wysoki. Jest za mało środków na koncie - zasil konto.")
                 db.session.commit()
-    return render_template('coin_purchase.html', balance=round(b.balance, 2), wallet=wallet, parameters=parameters, symbol2=symbol2)
+    parameters_copy=deepcopy(parameters)
+    parameters_copy.pop(symbol2)
+    return render_template('coin_purchase.html', balance=round(b.balance, 2), wallet=wallet, parameters=parameters_copy, symbol2=symbol2)
 
 
 @app.route("/purse_sell", methods=['GET', 'POST'])
